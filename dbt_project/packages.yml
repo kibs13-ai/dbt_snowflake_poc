@@ -1,0 +1,8 @@
+# Pakiety publiczne z dbt Hub — oba zgodne z runtime Snowflake 1.9.4 / 1.10.15.
+# Rekomendacja PoC: pre-bundling — uruchomić `dbt deps` lokalnie i zacommitować
+# dbt_packages/ (brak external access, działa też na trialu).
+packages:
+  - package: ScalefreeCOM/datavault4dbt   # materializacje/makra warstwy RDV
+    version: 1.15.0                        # require-dbt-version >=1.0.0,<3.0.0
+  - package: dbt-labs/codegen             # narzędzie deweloperskie (generowanie YAML)
+    version: 0.14.0                        # require-dbt-version >=1.1.0,<3.0.0

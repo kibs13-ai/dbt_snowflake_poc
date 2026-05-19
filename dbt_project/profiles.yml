@@ -1,0 +1,16 @@
+# dbt Projects on Snowflake wymaga profiles.yml w folderze projektu.
+# type musi być 'snowflake'; account i user mogą zostać puste ('not needed')
+# — projekt uruchamia się w kontekście bieżącego konta/użytkownika Snowflake.
+# Schema docelowa musi istnieć PRZED utworzeniem obiektu DBT PROJECT.
+dbt_snowflake_poc:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: 'not needed'
+      user: 'not needed'
+      role: '<ROLA_POC>'
+      database: '<DB_POC>'
+      schema: '<SCHEMA_POC>'
+      warehouse: '<WH_POC>'        # warehouse user-managed (serverless niedozwolony)
+      threads: 8                   # wielowątkowe budowanie modeli — wspierane i zalecane

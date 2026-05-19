@@ -1,0 +1,26 @@
+# Lokalne notatki i dokumentacja referencyjna — nie pushować na repo
+knowledge/
+
+# dbt
+target/
+dbt_packages/
+logs/
+.user.yml
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Sekrety / lokalna konfiguracja
+*.env
+.env
+profiles.local.yml

@@ -1,0 +1,44 @@
+name: 'dbt_snowflake_poc'
+version: '1.0.0'
+config-version: 2
+
+# Profil musi odpowiadać profilowi w profiles.yml (ten sam folder projektu).
+profile: 'dbt_snowflake_poc'
+
+# dbt Projects on Snowflake: managed runtime 1.10.15 / 1.9.4 — brak 1.11.
+require-dbt-version: ">=1.9.0,<1.11.0"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Zmienne projektu — zastępują env_var() (nieobsługiwane w dbt on Snowflake).
+# Uzupełnić realnymi wartościami; nadpisywalne przez --vars w EXECUTE DBT PROJECT.
+vars:
+  source_database: '<SOURCE_DB>'      # baza z tabelami pre-tworzonymi przez Liquibase
+  source_schema: '<SOURCE_SCHEMA>'
+
+models:
+  dbt_snowflake_poc:
+    staging:
+      # warstwa STG/PRS — dbt robi tylko INSERT na tabelach Liquibase
+      +materialized: incremental
+      stage:
+        +tags: ['staging']
+      parsed:
+        +tags: ['staging']
+    rdv:
+      # Raw Data Vault — materializacje/makra z pakietu datavault4dbt
+      +materialized: incremental
+      +tags: ['rdv']
+
+# Tagi per Job (stg_light / stg_ado_heavy / stg_gam_heavy / rdv_light / rdv_heavy)
+# nadawane per model lub w _heavy_tags.yml — sterują selekcją w EXECUTE DBT PROJECT.
