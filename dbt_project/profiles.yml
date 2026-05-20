@@ -8,41 +8,32 @@
 # makro generate_schema_name (login usera z CURRENT_USER()) — pole 'schema'
 # poniżej służy tylko jako kontekst połączeniowy; PUBLIC istnieje domyślnie.
 dbt_snowflake_poc:
-  target: personal              # domyślny — lokalna piaskownica dewelopera
+  target: personal
   outputs:
-
-    # ---------- PERSONAL (Workspace dewelopera) ----------
-    # Schemat per dev rozwiązuje makro generate_schema_name -> <login>_<custom>.
-    # Każdy dev jednorazowo zakłada własne schematy w PERSONAL_DEVELOPMENT
-    # (np. ALICJA, ALICJA_STAGING, ALICJA_RDV) — lub robi to skrypt onboardingowy.
     personal:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: '<ROLA_DEV>'
+      role: DBT_POC_DEV
       database: PERSONAL_DEVELOPMENT
-      schema: PUBLIC              # placeholder — rzeczywista schema z makra
-      warehouse: '<WH_DEV>'
+      schema: PUBLIC
+      warehouse: WH_DBT_POC_DEV
       threads: 8
-
-    # ---------- DEV (shared, deployowany obiekt DBT PROJECT) ----------
     dev:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: '<ROLA_DEV>'
-      database: '<DB_DEV>'
-      schema: '<SCHEMA_DEV>'
-      warehouse: '<WH_DEV>'
+      role: DBT_POC_DEV
+      database: DBT_POC_DEV
+      schema: DEV
+      warehouse: WH_DBT_POC_DEV
       threads: 8
-
-    # ---------- PRD (produkcja) ----------
     prd:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: '<ROLA_PRD>'
-      database: '<DB_PRD>'
-      schema: '<SCHEMA_PRD>'
-      warehouse: '<WH_PRD>'      # warehouse user-managed (serverless niedozwolony)
+      role: DBT_POC_PRD
+      database: DBT_POC_PRD
+      schema: PRD
+      warehouse: WH_DBT_POC_PRD
       threads: 8
