@@ -11,7 +11,7 @@
 #   — wtedy nie trzeba go podawać per komenda.
 #   Nowy dev = +7 linijek tutaj + jedno uruchomienie 02_onboard_dev.sql.
 dbt_snowflake_poc:
-  target: personal_jakub             # default; pozostali devy nadpisują w args Workspace
+  target: dev             # default; pozostali devy nadpisują w args Workspace
   outputs:
 
     # ---------- PERSONAL (per dev) ----------
@@ -19,9 +19,19 @@ dbt_snowflake_poc:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: DBT_POC_DEV
+      role: DBT_POC_DEV_JAKUB
       database: PERSONAL_DEVELOPMENT
-      schema: jakub_wojciechowski    # login Snowflake (lowercase)
+      schema: jakub_wojciechowski
+      warehouse: WH_DBT_POC_DEV
+      threads: 8
+
+    personal_klaudia:
+      type: snowflake
+      account: 'not needed'
+      user: 'not needed'
+      role: DBT_POC_DEV_KLAUDIA_CIOCHON
+      database: PERSONAL_DEVELOPMENT
+      schema: KLAUDIA_CIOCHON 
       warehouse: WH_DBT_POC_DEV
       threads: 8
 
