@@ -3,26 +3,25 @@
   dbt Projects on Snowflake.
 
   Cel:
-    - W targecie 'personal' każdy dev pracuje w bazie PERSONAL_DEVELOPMENT,
-      w schemacie nazwanym jego loginem Snowflake — bez ręcznej edycji
-      profiles.yml (jeden plik dla całego zespołu).
-    - W targetach dev/test/prd zachowujemy domyślny wzorzec dbt:
+    - W targecie 'personal' wszystkie modele dewelopera lądują w JEDNYM schemacie
+      nazwanym jego loginem Snowflake (PERSONAL_DEVELOPMENT.<login>),
+      niezależnie od custom_schema z dbt_project.yml. Piaskownica jest płaska
+      — bez podziału na warstwy.
+    - W targetach dev/prd zachowujemy domyślny wzorzec dbt:
       <target.schema>_<custom_schema>.
 
   Reguły:
     target.name == 'personal':
-      brak custom_schema  ->  <login_usera>
-      jest custom_schema  ->  <login_usera>_<custom_schema>
-    target.name in (dev, test, prd):
+      ZAWSZE -> <login_usera>   (custom_schema IGNOROWANY)
+    target.name in (dev, prd):
       brak custom_schema  ->  <target.schema>
       jest custom_schema  ->  <target.schema>_<custom_schema>
 
   Wymagania (Snowflake nie tworzy schematów automatycznie pod dbt on Snowflake):
     - Baza PERSONAL_DEVELOPMENT musi istnieć, dev musi mieć do niej dostęp.
-    - Schematy używane przez modele muszą istnieć PRZED `EXECUTE DBT PROJECT`.
-      Dla personal: jednorazowo per dev (np. `CREATE SCHEMA PERSONAL_DEVELOPMENT.alicja`
-      oraz schematy <login>_staging, <login>_rdv jeśli używamy custom_schema).
-      Dla dev/test/prd: Liquibase tworzy je przed deployem.
+    - Dla personal: jednorazowo zakładamy `PERSONAL_DEVELOPMENT.<login>` per dev
+      (skrypt 02_onboard_dev.sql).
+    - Dla dev/prd: schematy <ENV>, <ENV>_<warstwa> przygotowane przez 01_setup.sql.
 
   Uwaga implementacyjna:
     run_query("SELECT CURRENT_USER()") odpala się dla każdego modelu w fazie
@@ -32,20 +31,17 @@
 {%- macro generate_schema_name(custom_schema_name, node) -%}
 
     {%- if target.name == 'personal' -%}
+        {#- Personal: jeden schemat = login usera, custom_schema ignorowany. -#}
         {%- if execute -%}
             {%- set query_result = run_query("SELECT LOWER(CURRENT_USER())") -%}
-            {%- set base_schema = query_result.columns[0].values()[0] -%}
+            {{ query_result.columns[0].values()[0] | trim }}
         {%- else -%}
-            {%- set base_schema = 'unknown_user' -%}
+            unknown_user
         {%- endif -%}
+    {%- elif custom_schema_name is none -%}
+        {{ target.schema | trim }}
     {%- else -%}
-        {%- set base_schema = target.schema -%}
-    {%- endif -%}
-
-    {%- if custom_schema_name is none -%}
-        {{ base_schema | trim }}
-    {%- else -%}
-        {{ base_schema | trim }}_{{ custom_schema_name | trim | lower }}
+        {{ target.schema | trim }}_{{ custom_schema_name | trim | lower }}
     {%- endif -%}
 
 {%- endmacro -%}

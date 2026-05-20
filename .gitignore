@@ -4,6 +4,9 @@ knowledge/
 # Skrypty bootstrapowe Snowflake (role/granty/bazy) — lokalnie, nie na repo
 snowflake/
 
+# Stan Claude Code (sesja agenta, hooks) — lokalnie
+.claude/
+
 # dbt
 target/
 dbt_packages/
