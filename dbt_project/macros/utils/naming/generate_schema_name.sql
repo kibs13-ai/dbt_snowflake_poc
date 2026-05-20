@@ -3,39 +3,41 @@
   dbt Projects on Snowflake.
 
   Cel:
-    - W targecie 'personal' wszystkie modele dewelopera lądują w JEDNYM schemacie
-      nazwanym jego loginem Snowflake (PERSONAL_DEVELOPMENT.<login>),
-      niezależnie od custom_schema z dbt_project.yml.
+    - W targetach personal_<login> wszystkie modele dewelopera lądują w JEDNYM
+      schemacie nazwanym jego loginem (PERSONAL_DEVELOPMENT.<login>),
+      niezależnie od custom_schema z dbt_project.yml. Schemat pochodzi
+      bezpośrednio z target.schema — hardcoded w profiles.yml per dev.
     - W targetach dev/prd zachowujemy domyślny wzorzec dbt:
       <target.schema>_<custom_schema>.
 
   Reguły:
-    target.name == 'personal':
-      schemat = var('dev_user') | lower    (custom_schema IGNOROWANY)
-      fallback (brak vara): target.schema  (PUBLIC z profiles.yml — sygnał błędu)
+    target.name.startswith('personal'):
+      schemat = target.schema (z profiles.yml — login dewelopera)
+      custom_schema IGNOROWANY (piaskownica płaska, bez warstw)
     target.name in (dev, prd):
       brak custom_schema  ->  <target.schema>
       jest custom_schema  ->  <target.schema>_<custom_schema>
 
-  Dlaczego var, a nie run_query("CURRENT_USER()"):
-    dbt 1.9 parsuje schematy STATYCZNIE w fazie parse (execute=False),
-    a dbt Projects on Snowflake nie wspiera env_var(). Wynik:
-    run_query nie zwraca wartości w parse, fallback dawał 'unknown_user'.
-    Vars to jedyna w pełni działająca droga w tym setupie.
+  Dlaczego per-dev targety zamiast var('dev_user') albo CURRENT_USER():
+    - dbt 1.9 parsuje schematy STATYCZNIE (execute=False) — run_query nie działa
+    - dbt on Snowflake nie wspiera env_var()
+    - target.user w managed runtime zwraca dosłownie 'not needed' z profiles.yml
+    Per-dev targety to jedyne pragmatyczne rozwiązanie skalujące się ponad 1 dev.
 
   Sposób użycia w personal:
-    Każdy dev podaje swój login w args= dbt-a:
-      dbt run --vars '{dev_user: jakub_wojciechowski}' --select <model>
+    Każdy dev w Workspace ustawia default args: `--target personal_<myname>`.
+    Po jednorazowym setupie nie trzeba podawać --target ani --vars.
+    Workspace zapamiętuje setting per-user.
 
-  Wymagania (Snowflake nie tworzy schematów automatycznie pod dbt on Snowflake):
-    - Schemat PERSONAL_DEVELOPMENT.<login> musi istnieć przed runem
-      (skrypt 02_onboard_dev.sql).
-    - Dla dev/prd: schematy <ENV>, <ENV>_<warstwa> przygotowane w 01_setup.sql.
+  Onboarding nowego dev:
+    1. Dopisać 7 linijek `personal_<login>` w profiles.yml (PR)
+    2. Uruchomić snowflake/02_onboard_dev.sql (zakłada schemat w PERSONAL_DEVELOPMENT)
+    3. Ustawić default --target w Workspace
 -#}
 {%- macro generate_schema_name(custom_schema_name, node) -%}
 
-    {%- if target.name == 'personal' -%}
-        {{ var('dev_user', target.schema) | lower | trim }}
+    {%- if target.name.startswith('personal') -%}
+        {{ target.schema | lower | trim }}
     {%- elif custom_schema_name is none -%}
         {{ target.schema | trim }}
     {%- else -%}

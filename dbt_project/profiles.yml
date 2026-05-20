@@ -4,21 +4,39 @@
 #
 # WAŻNE: schema podana w profiles.yml musi ISTNIEĆ w Snowflake przed
 # `EXECUTE DBT PROJECT` (dbt on Snowflake nie tworzy schematów automatycznie).
-# Dla 'personal' rzeczywisty schemat modeli wyliczany jest dynamicznie przez
-# makro generate_schema_name (login usera z CURRENT_USER()) — pole 'schema'
-# poniżej służy tylko jako kontekst połączeniowy; PUBLIC istnieje domyślnie.
+#
+# Targety personal_<login>:
+#   Każdy dev ma własny target z hardcoded schema = jego login Snowflake
+#   (lowercase). W Workspace ustaw `--target personal_<login>` jako default args
+#   — wtedy nie trzeba go podawać per komenda.
+#   Nowy dev = +7 linijek tutaj + jedno uruchomienie 02_onboard_dev.sql.
 dbt_snowflake_poc:
-  target: personal
+  target: personal_jakub             # default; pozostali devy nadpisują w args Workspace
   outputs:
-    personal:
+
+    # ---------- PERSONAL (per dev) ----------
+    personal_jakub:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
       role: DBT_POC_DEV
       database: PERSONAL_DEVELOPMENT
-      schema: PUBLIC
+      schema: jakub_wojciechowski    # login Snowflake (lowercase)
       warehouse: WH_DBT_POC_DEV
       threads: 8
+
+    # Szablon dla kolejnego dewelopera — odkomentować + podstawić login:
+    # personal_<login>:
+    #   type: snowflake
+    #   account: 'not needed'
+    #   user: 'not needed'
+    #   role: DBT_POC_DEV
+    #   database: PERSONAL_DEVELOPMENT
+    #   schema: <login>
+    #   warehouse: WH_DBT_POC_DEV
+    #   threads: 8
+
+    # ---------- DEV (shared) ----------
     dev:
       type: snowflake
       account: 'not needed'
