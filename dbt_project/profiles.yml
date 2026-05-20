@@ -1,16 +1,48 @@
 # dbt Projects on Snowflake wymaga profiles.yml w folderze projektu.
 # type musi być 'snowflake'; account i user mogą zostać puste ('not needed')
 # — projekt uruchamia się w kontekście bieżącego konta/użytkownika Snowflake.
-# Schema docelowa musi istnieć PRZED utworzeniem obiektu DBT PROJECT.
+#
+# WAŻNE: schema podana w profiles.yml musi ISTNIEĆ w Snowflake przed
+# `EXECUTE DBT PROJECT` (dbt on Snowflake nie tworzy schematów automatycznie).
+# Dla 'personal' rzeczywisty schemat modeli wyliczany jest dynamicznie przez
+# makro generate_schema_name (login usera z CURRENT_USER()) — pole 'schema'
+# poniżej służy tylko jako kontekst połączeniowy; PUBLIC istnieje domyślnie.
 dbt_snowflake_poc:
-  target: dev
+  target: personal              # domyślny — lokalna piaskownica dewelopera
   outputs:
+
+    # ---------- PERSONAL (Workspace dewelopera) ----------
+    # Schemat per dev rozwiązuje makro generate_schema_name -> <login>_<custom>.
+    # Każdy dev jednorazowo zakłada własne schematy w PERSONAL_DEVELOPMENT
+    # (np. ALICJA, ALICJA_STAGING, ALICJA_RDV) — lub robi to skrypt onboardingowy.
+    personal:
+      type: snowflake
+      account: 'not needed'
+      user: 'not needed'
+      role: '<ROLA_DEV>'
+      database: PERSONAL_DEVELOPMENT
+      schema: PUBLIC              # placeholder — rzeczywista schema z makra
+      warehouse: '<WH_DEV>'
+      threads: 8
+
+    # ---------- DEV (shared, deployowany obiekt DBT PROJECT) ----------
     dev:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: '<ROLA_POC>'
-      database: '<DB_POC>'
-      schema: '<SCHEMA_POC>'
-      warehouse: '<WH_POC>'        # warehouse user-managed (serverless niedozwolony)
-      threads: 8                   # wielowątkowe budowanie modeli — wspierane i zalecane
+      role: '<ROLA_DEV>'
+      database: '<DB_DEV>'
+      schema: '<SCHEMA_DEV>'
+      warehouse: '<WH_DEV>'
+      threads: 8
+
+    # ---------- PRD (produkcja) ----------
+    prd:
+      type: snowflake
+      account: 'not needed'
+      user: 'not needed'
+      role: '<ROLA_PRD>'
+      database: '<DB_PRD>'
+      schema: '<SCHEMA_PRD>'
+      warehouse: '<WH_PRD>'      # warehouse user-managed (serverless niedozwolony)
+      threads: 8

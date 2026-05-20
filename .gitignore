@@ -1,6 +1,9 @@
 # Lokalne notatki i dokumentacja referencyjna — nie pushować na repo
 knowledge/
 
+# Skrypty bootstrapowe Snowflake (role/granty/bazy) — lokalnie, nie na repo
+snowflake/
+
 # dbt
 target/
 dbt_packages/
