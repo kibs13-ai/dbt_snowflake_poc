@@ -2,10 +2,14 @@ version: 2
 
 sources:
   - name: SALESFORCE
-    # Baza wybierana dynamicznie wg targetu (env_var() niedozwolone w dbt on Snowflake):
+    # Baza wybierana dynamicznie wg targetu — inline Jinja zamiast makra,
+    # bo dbt-snowflake managed runtime NIE udostępnia user-defined macros
+    # w rendering-context source yml (testowane: macro 'undefined' przy parse).
+    # env_var() też nieobsługiwane w dbt on Snowflake — stąd ten zwrot.
+    #
     #   personal_* / prd -> DB_TVN_AD_SALES_LOAD_STAGE_PRD
     #   dev              -> DB_TVN_AD_SALES_LOAD_STAGE_DEV
-    database: "{{ source_database_for_target() }}"
+    database: "{% if target.name == 'dev' %}DB_TVN_AD_SALES_LOAD_STAGE_DEV{% else %}DB_TVN_AD_SALES_LOAD_STAGE_PRD{% endif %}"
     schema: SCH_SRC
     config:
       meta:
