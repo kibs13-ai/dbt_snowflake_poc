@@ -1,0 +1,105 @@
+version: 2
+
+sources:
+  - name: SALESFORCE
+    # Baza wybierana dynamicznie wg targetu (env_var() niedozwolone w dbt on Snowflake):
+    #   personal_* / prd -> DB_TVN_AD_SALES_LOAD_STAGE_PRD
+    #   dev              -> DB_TVN_AD_SALES_LOAD_STAGE_DEV
+    database: "{{ source_database_for_target() }}"
+    schema: SCH_SRC
+    config:
+      meta:
+        bkcc: 'SALESFORCE'
+        record_source: 'SALESFORCE'
+    tables:
+      - name: SRC_SALESFORCE_OPPORTUNITY
+        config:
+          meta:
+            record_source: 'OPPORTUNITY'
+        columns:
+          - name: TECH_SOURCE_SYSTEM
+            data_type: VARCHAR
+          - name: TECH_SOURCE_STORAGE_LOCATION_NAME
+            data_type: VARCHAR
+          - name: TECH_SOURCE_STORAGE_DATABASE_NAME
+            data_type: VARCHAR
+          - name: TECH_SOURCE_STORAGE_TABLE_NAME
+            data_type: VARCHAR
+          - name: TECH_SOURCE_STORAGE_PARTITION
+            data_type: VARCHAR
+          - name: TECH_DAG_NAME
+            data_type: VARCHAR
+          - name: TECH_DAG_TASK_NAME
+            data_type: VARCHAR
+          - name: TECH_DAGRUN_ID
+            data_type: VARCHAR
+          - name: TECH_LOAD_TS
+            data_type: TIMESTAMP_LTZ
+          - name: ID
+            data_type: VARCHAR
+          - name: IS_DELETED
+            data_type: VARCHAR
+          - name: ACCOUNT_ID
+            data_type: VARCHAR
+          - name: RECORD_TYPE_ID
+            data_type: VARCHAR
+          - name: NAME
+            data_type: VARCHAR
+          - name: DESCRIPTION
+            data_type: VARCHAR
+          - name: STAGE_NAME
+            data_type: VARCHAR
+          - name: AMOUNT
+            data_type: NUMBER
+          - name: PROBABILITY
+            data_type: NUMBER
+          - name: CLOSE_DATE
+            data_type: DATE
+          - name: TYPE
+            data_type: VARCHAR
+          - name: IS_CLOSED
+            data_type: VARCHAR
+          - name: IS_WON
+            data_type: VARCHAR
+          - name: FORECAST_CATEGORY
+            data_type: VARCHAR
+          - name: FORECAST_CATEGORY_NAME
+            data_type: VARCHAR
+          - name: CAMPAIGN_ID
+            data_type: VARCHAR
+          - name: HAS_OPPORTUNITY_LINE_ITEM
+            data_type: VARCHAR
+          - name: PRICEBOOK2_ID
+            data_type: VARCHAR
+          - name: OWNER_ID
+            data_type: VARCHAR
+          - name: CREATED_DATE
+            data_type: TIMESTAMP_TZ
+          - name: CREATED_BY_ID
+            data_type: VARCHAR
+          - name: LAST_MODIFIED_DATE
+            data_type: TIMESTAMP_TZ
+          - name: LAST_MODIFIED_BY_ID
+            data_type: VARCHAR
+          - name: SYSTEM_MODSTAMP
+            data_type: TIMESTAMP_TZ
+          - name: SYNCED_QUOTE_ID
+            data_type: VARCHAR
+          - name: VLOCITY_CMT_BUDGET_AMOUNT_C
+            data_type: NUMBER
+          - name: VLOCITY_CMT_PRICE_LIST_ID_C
+            data_type: VARCHAR
+          - name: AGENCY_C
+            data_type: VARCHAR
+          - name: LOSS_REASON_C
+            data_type: VARCHAR
+          - name: PARTY_RELATIONSHIP_C
+            data_type: VARCHAR
+          - name: BRAND_C
+            data_type: VARCHAR
+          - name: OPPORTUNITY_NUMBER_C
+            data_type: VARCHAR
+          - name: CONJOINED_ORDER_C
+            data_type: VARCHAR
+          - name: DAY
+            data_type: VARCHAR

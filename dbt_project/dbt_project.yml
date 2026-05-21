@@ -2,10 +2,10 @@ name: 'dbt_snowflake_poc'
 version: '1.0.0'
 config-version: 2
 
-# Profil musi odpowiadać profilowi w profiles.yml (ten sam folder projektu).
+# Profil w profiles.yml (ten sam folder projektu)
 profile: 'dbt_snowflake_poc'
 
-# dbt Projects on Snowflake: managed runtime 1.10.15 / 1.9.4 — brak 1.11.
+# dbt Projects on Snowflake: managed runtime 1.10.15 / 1.9.4 — brak 1.11
 require-dbt-version: ">=1.9.0,<1.11.0"
 
 model-paths: ["models"]
@@ -20,25 +20,39 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
-# Zmienne projektu — zastępują env_var() (nieobsługiwane w dbt on Snowflake).
-# Uzupełnić realnymi wartościami; nadpisywalne przez --vars w EXECUTE DBT PROJECT.
-vars:
-  source_database: '<SOURCE_DB>'      # baza z tabelami pre-tworzonymi przez Liquibase
-  source_schema: '<SOURCE_SCHEMA>'
-
+# ===== Konfiguracja warstw =====
+# Routing per warstwa (database/schema) działa TYLKO dla targetów dev/prd.
+# Dla personal_* makra generate_database_name + generate_schema_name ignorują
+# +database/+schema i kierują wszystko do PERSONAL_DEVELOPMENT.<login>.
+#
+# Wzorzec custom_database: prefix bez sufiksu env (makro doklei _DEV / _PRD):
+#   +database: DB_TVN_AD_SALES_LOAD_STAGE  ->  DB_TVN_AD_SALES_LOAD_STAGE_DEV
+#                                           ->  DB_TVN_AD_SALES_LOAD_STAGE_PRD
 models:
   dbt_snowflake_poc:
-    staging:
-      # warstwa STG/PRS — dbt robi tylko INSERT na tabelach Liquibase
-      +materialized: incremental
-      stage:
-        +tags: ['staging']
-      parsed:
-        +tags: ['staging']
-    rdv:
-      # Raw Data Vault — materializacje/makra z pakietu datavault4dbt
-      +materialized: incremental
-      +tags: ['rdv']
 
-# Tagi per Job (stg_light / stg_ado_heavy / stg_gam_heavy / rdv_light / rdv_heavy)
-# nadawane per model lub w _heavy_tags.yml — sterują selekcją w EXECUTE DBT PROJECT.
+    staging:
+      stage:
+        Salesforce:
+          +database: DB_TVN_AD_SALES_LOAD_STAGE
+          +schema: SCH_STAGE
+          +materialized: table
+          +transient: true
+          +tags: ['staging', 'salesforce', 'stage']
+      parsed:
+        Salesforce:
+          +database: DB_TVN_AD_SALES_LOAD_STAGE
+          +schema: SCH_PARSED
+          +materialized: view
+          +tags: ['staging', 'salesforce', 'parsed']
+
+    rdv:
+      +database: DB_TVN_AD_SALES_RDV
+      +schema: SCH_RDV
+      +materialized: table
+      hubs:
+        +tags: ['rdv', 'salesforce', 'hub']
+      links:
+        +tags: ['rdv', 'salesforce', 'link']
+      satellite:
+        +tags: ['rdv', 'salesforce', 'satellite']

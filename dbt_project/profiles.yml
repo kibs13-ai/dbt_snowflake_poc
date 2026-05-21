@@ -1,17 +1,18 @@
 # dbt Projects on Snowflake wymaga profiles.yml w folderze projektu.
-# type musi być 'snowflake'; account i user mogą zostać puste ('not needed')
-# — projekt uruchamia się w kontekście bieżącego konta/użytkownika Snowflake.
-#
-# WAŻNE: schema podana w profiles.yml musi ISTNIEĆ w Snowflake przed
-# `EXECUTE DBT PROJECT` (dbt on Snowflake nie tworzy schematów automatycznie).
+# type=snowflake; account/user mogą być 'not needed' — runtime używa
+# sesyjnego kontekstu Snowflake.
 #
 # Targety personal_<login>:
 #   Każdy dev ma własny target z hardcoded schema = jego login Snowflake
-#   (lowercase). W Workspace ustaw `--target personal_<login>` jako default args
-#   — wtedy nie trzeba go podawać per komenda.
-#   Nowy dev = +7 linijek tutaj + jedno uruchomienie 02_onboard_dev.sql.
+#   (lowercase) + per-dev rolę DBT_POC_DEV_<LOGIN>. Workspace zapamiętuje
+#   wybór profilu (dropdown nad edytorem) — wybierasz raz, działa per sesja.
+#
+# Routing per warstwa (database/schema modeli dev/prd) załatwiają makra
+# generate_database_name + generate_schema_name na podstawie target.name.
+# Pola database/schema w dev/prd to fallback / kontekst połączeniowy.
+
 dbt_snowflake_poc:
-  target: dev             # default; pozostali devy nadpisują w args Workspace
+  target: dev                                  # default; devy nadpisują w Workspace
   outputs:
 
     # ---------- PERSONAL (per dev) ----------
@@ -31,37 +32,39 @@ dbt_snowflake_poc:
       user: 'not needed'
       role: DBT_POC_DEV_KLAUDIA_CIOCHON
       database: PERSONAL_DEVELOPMENT
-      schema: KLAUDIA_CIOCHON 
+      schema: KLAUDIA_CIOCHON
       warehouse: WH_DBT_POC_DEV
       threads: 8
 
-    # Szablon dla kolejnego dewelopera — odkomentować + podstawić login:
+    # Szablon dla kolejnego dewelopera:
     # personal_<login>:
     #   type: snowflake
     #   account: 'not needed'
     #   user: 'not needed'
-    #   role: DBT_POC_DEV
+    #   role: DBT_POC_DEV_<LOGIN_UPPER>
     #   database: PERSONAL_DEVELOPMENT
-    #   schema: <login>
+    #   schema: <login_lowercase>
     #   warehouse: WH_DBT_POC_DEV
     #   threads: 8
 
-    # ---------- DEV (shared) ----------
+    # ---------- DEV (TVN AD_SALES, shared) ----------
     dev:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: DBT_POC_DEV
-      database: DBT_POC_DEV
-      schema: DEV
+      role: DBT_TVN_DEV                        # rola pisarska tylko na DB_TVN_AD_SALES_*_DEV
+      database: DB_TVN_AD_SALES_LOAD_STAGE_DEV # fallback; modele nadpisują przez +database
+      schema: SCH_STAGE                        # fallback; modele nadpisują przez +schema
       warehouse: WH_DBT_POC_DEV
       threads: 8
+
+    # ---------- PRD (TVN AD_SALES, produkcja) ----------
     prd:
       type: snowflake
       account: 'not needed'
       user: 'not needed'
-      role: DBT_POC_PRD
-      database: DBT_POC_PRD
-      schema: PRD
+      role: DBT_TVN_PRD                        # rola pisarska tylko na DB_TVN_AD_SALES_*_PRD
+      database: DB_TVN_AD_SALES_LOAD_STAGE_PRD
+      schema: SCH_STAGE
       warehouse: WH_DBT_POC_PRD
       threads: 8
