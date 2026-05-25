@@ -1,16 +1,3 @@
-# dbt Projects on Snowflake wymaga profiles.yml w folderze projektu.
-# type=snowflake; account/user mogą być 'not needed' — runtime używa
-# sesyjnego kontekstu Snowflake.
-#
-# Targety personal_<login>:
-#   Każdy dev ma własny target z hardcoded schema = jego login Snowflake
-#   (lowercase) + per-dev rolę DBT_POC_DEV_<LOGIN>. Workspace zapamiętuje
-#   wybór profilu (dropdown nad edytorem) — wybierasz raz, działa per sesja.
-#
-# Routing per warstwa (database/schema modeli dev/prd) załatwiają makra
-# generate_database_name + generate_schema_name na podstawie target.name.
-# Pola database/schema w dev/prd to fallback / kontekst połączeniowy.
-
 dbt_snowflake_poc:
   target: dev                                  # default; devy nadpisują w Workspace
   outputs:
@@ -36,17 +23,16 @@ dbt_snowflake_poc:
       warehouse: WH_DBT_POC_DEV
       threads: 8
 
-    # Szablon dla kolejnego dewelopera:
-    # personal_<login>:
-    #   type: snowflake
-    #   account: 'not needed'
-    #   user: 'not needed'
-    #   role: DBT_POC_DEV_<LOGIN_UPPER>
-    #   database: PERSONAL_DEVELOPMENT
-    #   schema: <login_lowercase>
-    #   warehouse: WH_DBT_POC_DEV
-    #   threads: 8
-
+    personal_patryk:
+      type: snowflake
+      account: 'not needed'
+      user: 'not needed'
+      role: DBT_POC_DEV_PATRYK_KRAJEWSKI
+      database: PERSONAL_DEVELOPMENT
+      schema: PATRYK_KRAJEWSKI
+      warehouse: WH_DBT_POC_DEV
+      threads: 8
+      
     # ---------- DEV (TVN AD_SALES, shared) ----------
     dev:
       type: snowflake
