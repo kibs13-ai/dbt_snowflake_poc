@@ -13,3 +13,6 @@ environment_id: 70506183153017      # Deployment environment
 # target.name uzywany w runie. MUSI byc "prd" albo "dev" (routing baz w makrach).
 # Ustaw zgodnie z tym, na co wskazuje Twoj Deployment environment.
 target_name: prd
+
+# typ srodowiska - uzywany w warunkach Jinja ({% if env_type == '...' %}) do gate'owania jobow
+env_type: prod

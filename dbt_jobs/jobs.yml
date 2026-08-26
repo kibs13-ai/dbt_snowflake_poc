@@ -776,3 +776,48 @@ jobs:
     triggers_on_draft_pr: false
     job_completion_trigger_condition: null
     custom_environment_variables: []
+
+# ===== TEST env_type (DM-1750) - gate'owanie jobow per srodowisko =====
+# Przy env_type=prod (vars_prod.yml) plan powinien: POKAZAC poc_prod_only_test,
+# a POMINAC poc_dev_only_test. To dowod dzialania warunkow Jinja na env_type.
+# (UWAGA: nie wstawiaj tagow Jinja w komentarzach - caly plik jest renderowany.)
+{% if env_type == 'dev' %}
+  poc_dev_only_test:
+    account_id: "{{ account_id }}"
+    project_id: "{{ project_id }}"
+    environment_id: "{{ environment_id }}"
+    name: PoC - dev only (env_type test)
+    generate_docs: false
+    run_generate_sources: false
+    execute_steps:
+      - dbt build
+    schedule:
+      cron: "0 5 * * *"
+    settings:
+      target_name: "{{ target_name }}"
+      threads: 4
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: true
+{% endif %}
+{% if env_type == 'prod' %}
+  poc_prod_only_test:
+    account_id: "{{ account_id }}"
+    project_id: "{{ project_id }}"
+    environment_id: "{{ environment_id }}"
+    name: PoC - prod only (env_type test)
+    generate_docs: false
+    run_generate_sources: false
+    execute_steps:
+      - dbt build
+    schedule:
+      cron: "0 6 * * *"
+    settings:
+      target_name: "{{ target_name }}"
+      threads: 4
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: true
+{% endif %}
