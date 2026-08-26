@@ -1,64 +1,778 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/dbt-labs/dbt-jobs-as-code/main/src/dbt_jobs_as_code/schemas/load_job_schema.json
 #
-# Definicje Jobow dbt Cloud zarzadzane jako kod (DM-1750 PoC).
-#
-# Klucz mapy (np. "bdv_daily_build") to IDENTYFIKATOR joba - dbt-jobs-as-code dopisze
-# go do nazwy joba w dbt Cloud jako [[bdv_daily_build]] i po tym rozpoznaje, ktore joby
-# sa zarzadzane kodem. NIE zmieniaj kluczy po pierwszym sync (inaczej = usuniecie + nowy job).
-#
-# account_id / project_id / environment_id / target_name sa szablonowane Jinja
-# i wstrzykiwane z dbt_jobs/vars_prod.yml przez flage --vars-yml.
-# (UWAGA: caly plik jest renderowany jako Jinja - nie wstawiaj podwojnych klamer w komentarzach.)
-#
-# UWAGA target_name: makra generate_database_name / generate_schema_name routuja bazy
-# wg target.name (dev -> _DEV, prd -> _PRD). Job MUSI miec target_name = dev albo prd.
+# DM-1750 PoC - ODWZOROWANIE 22 jobow ze srodowiska PRODUKCYJNEGO (env 366927,
+# projekt 395424, konto 179582). Zaimportowane przez dbt-jobs-as-code import-jobs,
+# ID (account/project/environment) zaszablonowane -> wstrzykiwane z vars_prod.yml na PoC.
+# Joby nie musza sie wykonac (brak modeli na koncie PoC) - chodzi o odwzorowanie ICH BUDOWY.
+# (UWAGA: caly plik renderowany jako Jinja - nie wstawiaj podwojnych klamer w komentarzach.)
 
 jobs:
-
-  bdv_daily_build:
-    account_id: "{{ account_id }}"
-    project_id: "{{ project_id }}"
-    environment_id: "{{ environment_id }}"
-    name: "BDV - Daily build"
-    description: "PoC DM-1750 - pelny build projektu (staging -> RDV), zarzadzany przez dbt-jobs-as-code"
-    dbt_version: null              # null = wersja z Environment w dbt Cloud
-    execute_steps:
-      - "dbt build"
-    execution:
-      timeout_seconds: 3600
-    generate_docs: false
-    run_generate_sources: false
-    schedule:
-      cron: "0 4 * * *"           # codziennie 04:00 UTC
-    settings:
-      target_name: "{{ target_name }}"
-      threads: 8
-    state: 1                       # 1 = aktywny
-    triggers:
-      github_webhook: false
-      git_provider_webhook: false
-      schedule: true               # odpalany z harmonogramu
-
-  bdv_staging_refresh:
-    account_id: "{{ account_id }}"
-    project_id: "{{ project_id }}"
-    environment_id: "{{ environment_id }}"
-    name: "BDV - Staging refresh"
-    description: "PoC DM-1750 - odswiezenie warstwy staging (drugi job, pokazuje zarzadzanie wieloma jobami)"
+  deploy_prd:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
     dbt_version: null
-    execute_steps:
-      - "dbt build --select tag:staging"
-    execution:
-      timeout_seconds: 1800
-    generate_docs: false
-    run_generate_sources: false
-    schedule:
-      cron: "0 */6 * * *"          # co 6 godzin
+    name: Deploy PRD
     settings:
-      target_name: "{{ target_name }}"
-      threads: 8
-    state: 1
+      threads: 4
+      target_name: prd
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt build
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
     triggers:
       github_webhook: false
       git_provider_webhook: false
-      schedule: true
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1521:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1521
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select \ SE_L_AD_ORDER_ITEM_ADSERVERS_DIRECT \ SE_L_AGENCY_NEGOTIATION_GROUP \ SED_L_ADSERVER_CAMPAIGN_EMPLOYEE_SALESPERSON \ SED_L_EMPLOYEE_ADSERVER_CAMPAIGN_TRAFFICKER \ SE_L_OPPORTUNITY_EMPLOYEE_ACCOUNT_MANAGER \ SE_L_QUOTE_EMPLOYEE_TRAFFIC_MANAGER \ SE_L_OPPORTUNITY_PARTIES \ SE_L_QUOTE_LINE_ITEM_PROGRAMMATIC_DEAL \ SE_L_OPPORTUNITY_PROJECT \ SE_L_PUBLISHER_SERVICE \ SE_L_QUOTE_LINE_ITEM_AD_ORDER_ITEM \ SE_L_QUOTE_YIELD_PARTNER \ SED_L_ADEXCHANGE_DIRECT_EMISSIONS \ SED_L_ADEXCHANGE_PROGRAMMATIC_EMISSIONS \ SED_L_YIELD_PARTNERS_EMISSIONS \ SE_L_QUOTE_LINE_ITEM_SERVICE
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1519:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1519
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select  H_PROGRAMMATIC_DEAL
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1646:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1646
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select PRS_SALESFORCE_OPPORTUNITY_RDV
+    - dbt run --select L_OPPORTUNITY_QUOTE_SYNCED
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1664:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1664
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select +H_OPPORTUNITY
+    - dbt run --select +H_QUOTE
+    - dbt run --select +L_OPPORTUNITY_QUOTE_SYNCED
+    - dbt run --select +SE_L_OPPORTUNITY_QUOTE_SYNCED
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1668:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1668
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s STG_GOOGLE_AD_MANAGER_API_AD_EXCHANGE_REPORT
+    - dbt run -s PRS_GOOGLE_AD_MANAGER_API_AD_EXCHANGE_REPORT_RDV
+    - dbt run -s H_PROGRAMMATIC_DEAL
+    - dbt run -s S_PROGRAMMATIC_DEAL_GOOGLE_AD_MANAGER
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1833:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1833
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s BV_S_YIELD_PARTNERS_EMISSIONS_STATISTICS_GOOGLE_AD_MANAGER
+    - dbt run -s BV_S_ADEXCHANGE_DIRECT_EMISSIONS_STATISTICS_GOOGLE_AD_MANAGER
+    - dbt run -s BV_S_ADEXCHANGE_PROGRAMMATIC_EMISSIONS_STATISTICS_GOOGLE_AD_MANAGER
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1835:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1835
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s BV_NHL_ADOCEAN_EMISSION_EVENTS_DAILY_AGG
+    - dbt run -s BV_L_EMISSION_EVENTS_ADOCEAN_MONTHLY_AGG
+    - dbt run -s BV_L_EMISSION_EVENTS_ADOCEAN_CAMPAIGN_MONTHLY_AGG
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1834:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1834
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select BV_PITBR_DIGITAL_SALES_CAMPAIGN
+    - dbt run --select BV_PITBR_DIGITAL_SALES_PROGRAMMATIC_DEALS
+    - dbt run --select BV_PITBR_DIGITAL_SALES_BUDGET
+    - dbt run --select BV_S_ADEXCHANGE_PROGRAMMATIC_EMISSIONS_STATISTICS_GOOGLE_AD_MANAGER
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  stage_parsed_rdv_digital_ad_sales_googleadmanager:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: stage_parsed_rdv__digital_ad_sales__GoogleAdManager
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select tag:GoogleAdManager,tag:stage tag:GoogleAdManager,tag:parsed tag:GoogleAdManager,tag:rdv
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  stage_parsed_rdv_digital_ad_sales_adocean:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: stage_parsed_rdv__digital_ad_sales__AdOcean
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select tag:AdOcean,tag:stage  tag:AdOcean,tag:parsed   tag:AdOcean,tag:rdv
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  stage_parsed_rdv_digital_ad_sales_salesforce:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: stage_parsed_rdv__digital_ad_sales__Salesforce
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select tag:Salesforce,tag:stage  tag:Salesforce,tag:parsed  tag:Salesforce,tag:rdv
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  advertiser_reolad:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: Advertiser reolad
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select STG_GOOGLE_AD_MANAGER_API_COMPANY+
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1837:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1837
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select BV_PITBR_ADEXCHANGE_PROGRAMMATIC
+    - dbt run --select BV_PITBR_YIELD_PARTNERS
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  stage_parsed_rdv_digital_ad_sales_googleadmanager_dt:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: stage_parsed_rdv__digital_ad_sales__GoogleAdManager_DT
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select tag:GoogleAdManager_DT,tag:stage tag:GoogleAdManager_DT,tag:parsed tag:GoogleAdManager_DT,tag:rdv
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1939:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1939
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s PRS_GOOGLE_AD_MANAGER_API_AD_EXCHANGE_REPORT_RDV
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1939a:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1939a
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s S_ADEXCHANGE_PROGRAMMATIC_EMISSIONS_STATISTICS_GOOGLE_AD_MANAGER
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1838:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1838
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s BV_PITBR_EMISSION_EVENTS_MONTHLY_AGG_ALL
+    - dbt run -s BV_PITBR_DIGITAL_SALES_CPM_REAL
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  l_adexchange_direct_emissions:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: L_ADEXCHANGE_DIRECT_EMISSIONS
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select STG_GOOGLE_AD_MANAGER_API_AD_SERVER_REPORT
+    - dbt run --select PRS_GOOGLE_AD_MANAGER_API_AD_SERVER_REPORT_RDV
+    - dbt run --select L_ADEXCHANGE_DIRECT_EMISSIONS
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  nhl_adocean_emission_events:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: NHL_ADOCEAN_EMISSION_EVENTS
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select STG_ADOCEAN_EVENTS
+    - dbt run --select PRS_ADOCEAN_EVENTS_RDV
+    - dbt run --select NHL_ADOCEAN_EMISSION_EVENTS
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  dm_1836:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1836
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s BV_NHL_DATA_TRANSFER_NETWORK_IMPRESSIONS_GOOGLE_AD_MANAGER_DAILY_AGG
+    - dbt run -s BV_PITBR_DATA_TRANSFER_NETWORK_BACKFILLIMPRESSIONS_GOOGLE_AD_MANAGER_DAILY_AGG
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
+  mds:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: MDS
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select +REF_ORDER_PLATFORM_PROVISIONS_HIS +REF_ECI_RATES +REF_CONTENT_OWNER_AGGREGATION +REF_PROGRAMMATIC_DEAL_CORRECTION +REF_EXCHANGE_RATES +REF_SERVICES_AGGREGATES
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
