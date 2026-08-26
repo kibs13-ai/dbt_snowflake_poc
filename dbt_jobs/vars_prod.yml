@@ -1,0 +1,15 @@
+# Zmienne wstrzykiwane do jobs.yml przez --vars-yml (dbt_jobs/vars_prod.yml).
+# Uzupelnij po utworzeniu Deployment environment w dbt Cloud.
+#
+# Gdzie znalezc ID (URL w dbt Cloud po zalogowaniu):
+#   account_id     -> /accounts/<account_id>/...
+#   project_id     -> /accounts/.../projects/<project_id>/...
+#   environment_id -> Deploy -> Environments -> wybrane srodowisko -> Settings (w URL)
+
+account_id: 70506183159060
+project_id: 70506183162859
+environment_id: 70506183153017      # Deployment environment
+
+# target.name uzywany w runie. MUSI byc "prd" albo "dev" (routing baz w makrach).
+# Ustaw zgodnie z tym, na co wskazuje Twoj Deployment environment.
+target_name: prd
