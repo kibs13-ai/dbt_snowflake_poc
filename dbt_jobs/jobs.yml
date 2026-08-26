@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbt-labs/dbt-jobs-as-code/main/src/dbt_jobs_as_code/schemas/load_job_schema.json
+#
+# Definicje Jobow dbt Cloud zarzadzane jako kod (DM-1750 PoC).
+#
+# Klucz mapy (np. "bdv_daily_build") to IDENTYFIKATOR joba - dbt-jobs-as-code dopisze
+# go do nazwy joba w dbt Cloud jako [[bdv_daily_build]] i po tym rozpoznaje, ktore joby
+# sa zarzadzane kodem. NIE zmieniaj kluczy po pierwszym sync (inaczej = usuniecie + nowy job).
+#
+# account_id / project_id / environment_id / target_name sa szablonowane Jinja
+# i wstrzykiwane z dbt_jobs/vars_prod.yml przez flage --vars-yml.
+# (UWAGA: caly plik jest renderowany jako Jinja - nie wstawiaj podwojnych klamer w komentarzach.)
+#
+# UWAGA target_name: makra generate_database_name / generate_schema_name routuja bazy
+# wg target.name (dev -> _DEV, prd -> _PRD). Job MUSI miec target_name = dev albo prd.
+
+jobs:
+
+  bdv_daily_build:
+    account_id: "{{ account_id }}"
+    project_id: "{{ project_id }}"
+    environment_id: "{{ environment_id }}"
+    name: "BDV - Daily build"
+    description: "PoC DM-1750 - pelny build projektu (staging -> RDV), zarzadzany przez dbt-jobs-as-code"
+    dbt_version: null              # null = wersja z Environment w dbt Cloud
+    execute_steps:
+      - "dbt build"
+    execution:
+      timeout_seconds: 3600
+    generate_docs: false
+    run_generate_sources: false
+    schedule:
+      cron: "0 4 * * *"           # codziennie 04:00 UTC
+    settings:
+      target_name: "{{ target_name }}"
+      threads: 8
+    state: 1                       # 1 = aktywny
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: true               # odpalany z harmonogramu
+
+  bdv_staging_refresh:
+    account_id: "{{ account_id }}"
+    project_id: "{{ project_id }}"
+    environment_id: "{{ environment_id }}"
+    name: "BDV - Staging refresh"
+    description: "PoC DM-1750 - odswiezenie warstwy staging (drugi job, pokazuje zarzadzanie wieloma jobami)"
+    dbt_version: null
+    execute_steps:
+      - "dbt build --select tag:staging"
+    execution:
+      timeout_seconds: 1800
+    generate_docs: false
+    run_generate_sources: false
+    schedule:
+      cron: "0 */6 * * *"          # co 6 godzin
+    settings:
+      target_name: "{{ target_name }}"
+      threads: 8
+    state: 1
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: true

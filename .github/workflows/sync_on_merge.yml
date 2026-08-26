@@ -1,0 +1,36 @@
+name: dbt jobs - sync (on merge)
+run-name: dbt-jobs-as-code sync - replikacja jobow do dbt Cloud
+
+# Po zmergowaniu PR do main aplikuje zmiany z dbt_jobs/** do dbt Cloud
+# (tworzy / aktualizuje / usuwa joby zarzadzane kodem).
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+    paths:
+      - 'dbt_jobs/**'
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.x"
+
+      - name: Install dbt-jobs-as-code
+        run: pip install "dbt-jobs-as-code~=1.20.0"
+
+      - name: Sync
+        run: dbt-jobs-as-code sync dbt_jobs/jobs.yml --vars-yml dbt_jobs/vars_prod.yml --limit-projects-envs-to-yml
+        env:
+          DBT_API_KEY: ${{ secrets.DBT_API_KEY }}
+          # DBT_BASE_URL: ${{ vars.DBT_BASE_URL }}   # odkomentuj jesli konto poza cloud.getdbt.com
