@@ -33,4 +33,4 @@ jobs:
         run: dbt-jobs-as-code sync dbt_jobs/jobs.yml --vars-yml dbt_jobs/vars_prod.yml --limit-projects-envs-to-yml
         env:
           DBT_API_KEY: ${{ secrets.DBT_API_KEY }}
-          # DBT_BASE_URL: ${{ vars.DBT_BASE_URL }}   # odkomentuj jesli konto poza cloud.getdbt.com
+          DBT_BASE_URL: https://dx232.us1.dbt.com   # nowa platforma dbt (nie cloud.getdbt.com)
