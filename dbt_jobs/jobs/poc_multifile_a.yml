@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbt-labs/dbt-jobs-as-code/main/src/dbt_jobs_as_code/schemas/load_job_schema.json
+# DM-1750 PoC - nowy job dodany jako osobny plik (test multi-file: CREATE).
+
+jobs:
+  poc_multifile_a:
+    account_id: "{{ account_id }}"
+    project_id: "{{ project_id }}"
+    environment_id: "{{ environment_id }}"
+    name: "PoC multi-file A"
+    generate_docs: false
+    run_generate_sources: false
+    execute_steps:
+      - "dbt build --select tag:staging"
+    schedule:
+      cron: "0 3 * * *"
+    settings:
+      target_name: "{{ target_name }}"
+      threads: 4
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: true
