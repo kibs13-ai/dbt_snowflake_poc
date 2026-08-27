@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbt-labs/dbt-jobs-as-code/main/src/dbt_jobs_as_code/schemas/load_job_schema.json
+# DM-1750 PoC - jeden job na plik (test podejscia multi-file).
+
+jobs:
+  dm_1835:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1835
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run -s BV_NHL_ADOCEAN_EMISSION_EVENTS_DAILY_AGG
+    - dbt run -s BV_L_EMISSION_EVENTS_ADOCEAN_MONTHLY_AGG
+    - dbt run -s BV_L_EMISSION_EVENTS_ADOCEAN_CAMPAIGN_MONTHLY_AGG
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []

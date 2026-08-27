@@ -30,7 +30,7 @@ jobs:
         run: pip install "dbt-jobs-as-code~=1.20.0"
 
       - name: Sync
-        run: dbt-jobs-as-code sync dbt_jobs/jobs.yml --vars-yml dbt_jobs/vars_prod.yml --limit-projects-envs-to-yml
+        run: dbt-jobs-as-code sync dbt_jobs/jobs --vars-yml dbt_jobs/vars_prod.yml --limit-projects-envs-to-yml
         env:
           DBT_API_KEY: ${{ secrets.DBT_API_KEY }}
           DBT_BASE_URL: https://dx232.us1.dbt.com   # nowa platforma dbt (nie cloud.getdbt.com)

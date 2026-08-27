@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dbt-labs/dbt-jobs-as-code/main/src/dbt_jobs_as_code/schemas/load_job_schema.json
+# DM-1750 PoC - jeden job na plik (test podejscia multi-file).
+
+jobs:
+  dm_1521:
+    account_id: '{{ account_id }}'
+    project_id: '{{ project_id }}'
+    environment_id: '{{ environment_id }}'
+    dbt_version: null
+    name: DM-1521
+    settings:
+      threads: 4
+      target_name: PRD
+    execution:
+      timeout_seconds: 0
+    deferring_job_definition_id: null
+    deferring_environment_id: null
+    run_generate_sources: false
+    run_lint: false
+    errors_on_lint_failure: true
+    execute_steps:
+    - dbt run --select \ SE_L_AD_ORDER_ITEM_ADSERVERS_DIRECT \ SE_L_AGENCY_NEGOTIATION_GROUP \ SED_L_ADSERVER_CAMPAIGN_EMPLOYEE_SALESPERSON \ SED_L_EMPLOYEE_ADSERVER_CAMPAIGN_TRAFFICKER \ SE_L_OPPORTUNITY_EMPLOYEE_ACCOUNT_MANAGER \ SE_L_QUOTE_EMPLOYEE_TRAFFIC_MANAGER \ SE_L_OPPORTUNITY_PARTIES \ SE_L_QUOTE_LINE_ITEM_PROGRAMMATIC_DEAL \ SE_L_OPPORTUNITY_PROJECT \ SE_L_PUBLISHER_SERVICE \ SE_L_QUOTE_LINE_ITEM_AD_ORDER_ITEM \ SE_L_QUOTE_YIELD_PARTNER \ SED_L_ADEXCHANGE_DIRECT_EMISSIONS \ SED_L_ADEXCHANGE_PROGRAMMATIC_EMISSIONS \ SED_L_YIELD_PARTNERS_EMISSIONS \ SE_L_QUOTE_LINE_ITEM_SERVICE
+    generate_docs: false
+    schedule:
+      cron: 3 */12 * * 0,1,2,3,4,5,6
+    triggers:
+      github_webhook: false
+      git_provider_webhook: false
+      schedule: false
+      on_merge: false
+    description: ''
+    run_compare_changes: false
+    compare_changes_flags: --select state:modified
+    job_type: other
+    cost_optimization_features: []
+    triggers_on_draft_pr: false
+    job_completion_trigger_condition: null
+    custom_environment_variables: []
